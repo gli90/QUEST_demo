@@ -1,4 +1,4 @@
-## Blue-Purple QUEST Experiment
+# QUEST for Blue-Purple
 
 A PsychoPy-based psychophysical experiment designed to estimate individual blue-purple color discrimination thresholds using the QUEST adaptive staircase procedure.
 

@@ -1,1 +1,129 @@
+"""
+taskA_perceptual_threshold_v2.py
+Skeleton v2.0
+Author: Gong Li
+"""
+
+from psychopy import visual, core, event, gui
+from psychopy.hardware import keyboard
+import numpy as np
+import pandas as pd
+import random
+
+# =====================================================
+# Settings
+# =====================================================
+DEBUG = True
+
+info = {"Participant":"","Age":"","Gender":""}
+dlg = gui.DlgFromDict(info, title="Perceptual Threshold Calibration")
+if not dlg.OK:
+    core.quit()
+
+participant = info["Participant"]
+
+if DEBUG:
+    win = visual.Window(size=(1000,700), color=(0,0,0), units="pix")
+else:
+    win = visual.Window(fullscr=True, color=(0,0,0), units="pix")
+
+kb = keyboard.Keyboard()
+
+# =====================================================
+# LAB -> RGB
+# =====================================================
+def lab_to_rgb(L,a,b):
+    fy=(L+16)/116
+    fx=fy+a/500
+    fz=fy-b/200
+    eps=0.008856
+    kap=903.3
+    xyz=[]
+    for f in [fx,fy,fz]:
+        xyz.append(f**3 if f**3>eps else (116*f-16)/kap)
+    X=xyz[0]*95.047/100
+    Y=xyz[1]*100/100
+    Z=xyz[2]*108.883/100
+    r=3.2406*X-1.5372*Y-0.4986*Z
+    g=-0.9689*X+1.8758*Y+0.0415*Z
+    bb=0.0557*X-0.2040*Y+1.0570*Z
+    rgb=np.array([r,g,bb])
+    rgb=np.where(rgb>0.0031308,1.055*np.power(rgb,1/2.4)-0.055,12.92*rgb)
+    return np.clip(rgb,0,1)
+
+# =====================================================
+# Experimental Chromatic Axis (placeholder)
+# =====================================================
+LSTAR=75
+REFERENCE=np.array([0.0,-25.0])
+ECA=np.array([1.0,0.0])   # replace after axis selection
+
+DIFFERENCES=[0,2,4,6,8,10]
+REPEAT=10
+
+trials=[]
+for d in DIFFERENCES:
+    for _ in range(REPEAT):
+        side=random.choice(["left","right"])
+        trials.append({"difference":d,"side":side})
+random.shuffle(trials)
+
+LEFT=(-250,0)
+RIGHT=(250,0)
+SIZE=80
+
+left_patch=visual.Rect(win,width=SIZE,height=SIZE,pos=LEFT,lineColor=None)
+right_patch=visual.Rect(win,width=SIZE,height=SIZE,pos=RIGHT,lineColor=None)
+fix=visual.TextStim(win,text="+",color="white")
+
+results=[]
+
+for i,t in enumerate(trials):
+    shift=t["difference"]*ECA
+    ref=REFERENCE
+    cmp=REFERENCE+shift
+
+    if t["side"]=="left":
+        left_lab, right_lab = cmp, ref
+        correct="Different" if t["difference"]>0 else "Same"
+    else:
+        left_lab, right_lab = ref, cmp
+        correct="Different" if t["difference"]>0 else "Same"
+
+    left_patch.fillColor=lab_to_rgb(LSTAR,left_lab[0],left_lab[1])*2-1
+    right_patch.fillColor=lab_to_rgb(LSTAR,right_lab[0],right_lab[1])*2-1
+
+    fix.draw(); win.flip(); core.wait(0.5)
+
+    clock=core.Clock()
+    resp=None
+    while resp is None:
+        left_patch.draw(); right_patch.draw()
+        win.flip()
+        keys=event.getKeys()
+        if "escape" in keys:
+            win.close(); core.quit()
+        if "y" in keys:
+            resp="Same"
+        if "n" in keys:
+            resp="Different"
+    rt=clock.getTime()
+    results.append({
+        "participant":participant,
+        "trial":i+1,
+        "difference":t["difference"],
+        "response":resp,
+        "correct":correct,
+        "accuracy":int(resp==correct),
+        "rt":round(rt,3)
+    })
+
+df=pd.DataFrame(results)
+df.to_csv(f"{participant}_taskA_v2.csv",index=False)
+
+visual.TextStim(win,text="Finished\nPress SPACE",color="white").draw()
+win.flip()
+event.waitKeys(keyList=["space"])
+win.close()
+core.quit()
 

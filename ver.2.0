@@ -15,6 +15,7 @@ from scipy.stats import norm
 # =====================================================
 
 DEBUG = True
+# (False = fullscreen)
 
 # ------------------------------------
 # Timing parameters

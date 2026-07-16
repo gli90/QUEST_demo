@@ -22,11 +22,6 @@ The goal is to estimate the perceptual boundary and discrimination threshold bet
 - pandas
 - numpy
 
-## Run
-
-```bash
-/Applications/PsychoPy.app/Contents/MacOS/python blue_purple_quest.py
-
 ## Why were these three chromatic axes selected?
 
 The present study aims to identify a chromatic axis that is most suitable for precise perceptual threshold estimation and subsequent metacognitive experiments. Rather than assuming a single optimal hue direction, three candidate axes were selected and evaluated empirically.
